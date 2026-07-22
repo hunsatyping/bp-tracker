@@ -6,6 +6,8 @@
 <title>บันทึกความดันโลหิต</title>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>
 * { box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; padding: 16px; background: #fafafa; color: #222; }
@@ -54,6 +56,17 @@ canvas { background: #fff; padding: 8px; border-radius: 4px; }
 </div>
 <script>
 const LIFF_ID = "2010792403-kdPdSofl";
+const firebaseConfig = {
+  apiKey: "AIzaSyC9hX3n6TNkzYwg75oFBCs7qeqKGQyXDgk",
+  authDomain: "bptracker-db4b5.firebaseapp.com",
+  projectId: "bptracker-db4b5",
+  storageBucket: "bptracker-db4b5.firebasestorage.app",
+  messagingSenderId: "565271148649",
+  appId: "1:565271148649:web:27fc897985a9ca6fe4caf8",
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 let userId = "guest";
 let records = [];
 let chartInstance = null;
@@ -95,8 +108,8 @@ async function init() {
 
 async function loadRecords() {
   try {
-    const raw = localStorage.getItem('bp_' + userId);
-    records = raw ? JSON.parse(raw) : [];
+    const doc = await db.collection('users').doc(userId).get();
+    records = doc.exists ? (doc.data().records || []) : [];
   } catch (e) {
     records = [];
   }
@@ -104,7 +117,7 @@ async function loadRecords() {
 
 async function saveRecords() {
   try {
-    localStorage.setItem('bp_' + userId, JSON.stringify(records));
+    await db.collection('users').doc(userId).set({ records }, { merge: true });
   } catch (e) {
     alert("บันทึกข้อมูลไม่สำเร็จ");
   }
